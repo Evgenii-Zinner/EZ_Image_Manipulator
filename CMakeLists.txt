@@ -18,25 +18,29 @@ if(MSVC)
     add_compile_options(/Zc:__cplusplus)
 endif()
 
-# Set the path to your Qt6 installation
-set(CMAKE_PREFIX_PATH "C:/Qt/6.9.2/mingw_64")
-
 # Find Qt packages
-find_package(Qt6 COMPONENTS 
+# The path to Qt6 should be provided by the user when running CMake, e.g.:
+# cmake -B build -DCMAKE_PREFIX_PATH="C:/Qt/6.9.2/mingw_64"
+find_package(Qt6 COMPONENTS
     Core
     Gui
     Widgets
     REQUIRED
 )
 
-# WebP configuration
-set(WEBP_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/third_party/libwebp-1.6.0-windows-x64/include)
-set(WEBP_LIBRARY_DIR ${CMAKE_SOURCE_DIR}/third_party/libwebp-1.6.0-windows-x64/lib)
+# WebP configuration using FetchContent
+include(FetchContent)
+FetchContent_Declare(
+    libwebp
+    GIT_REPOSITORY https://github.com/webmproject/libwebp.git
+    GIT_TAG v1.6.0 # Using a stable version tag
+)
+FetchContent_MakeAvailable(libwebp)
+
 
 # Include directories
 include_directories(
     ${CMAKE_SOURCE_DIR}/include
-    ${WEBP_INCLUDE_DIR}
 )
 
 # Source files
@@ -68,48 +72,12 @@ set(HEADERS
 # Create executable
 add_executable(${PROJECT_NAME} WIN32 ${SOURCES} ${HEADERS})
 
-# Link directories
-link_directories(${WEBP_LIBRARY_DIR})
-
-## Choose WebP library filenames (prefer MinGW .a archives, fall back to .lib)
-if(EXISTS "${WEBP_LIBRARY_DIR}/libwebp.a")
-    set(WEBP_LIB_WEBP "${WEBP_LIBRARY_DIR}/libwebp.a")
-else()
-    set(WEBP_LIB_WEBP "${WEBP_LIBRARY_DIR}/libwebp.lib")
-endif()
-
-if(EXISTS "${WEBP_LIBRARY_DIR}/libwebpmux.a")
-    set(WEBP_LIB_WEBPMUX "${WEBP_LIBRARY_DIR}/libwebpmux.a")
-else()
-    set(WEBP_LIB_WEBPMUX "${WEBP_LIBRARY_DIR}/libwebpmux.lib")
-endif()
-
-if(EXISTS "${WEBP_LIBRARY_DIR}/libwebpdemux.a")
-    set(WEBP_LIB_WEBPDEMUX "${WEBP_LIBRARY_DIR}/libwebpdemux.a")
-else()
-    set(WEBP_LIB_WEBPDEMUX "${WEBP_LIBRARY_DIR}/libwebpdemux.lib")
-endif()
-
-if(EXISTS "${WEBP_LIBRARY_DIR}/libsharpyuv.a")
-    set(WEBP_LIB_SHARPYUV "${WEBP_LIBRARY_DIR}/libsharpyuv.a")
-else()
-    set(WEBP_LIB_SHARPYUV "${WEBP_LIBRARY_DIR}/libsharpyuv.lib")
-endif()
-
-# Link libraries; order matters: libwebp may depend on sharpyuv in some builds, so place
-# sharpyuv after libwebp to satisfy the GNU linker (objects first, then dependencies).
-set(WEBP_LIBS
-    ${WEBP_LIB_WEBP}
-    ${WEBP_LIB_WEBPMUX}
-    ${WEBP_LIB_WEBPDEMUX}
-    ${WEBP_LIB_SHARPYUV}
-)
-
+# Link libraries
 target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
-    ${WEBP_LIBS}
+    webp
 )
 
 # Set output directories
@@ -117,48 +85,23 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
-## Copy WebP and Qt DLLs to output directory (only if present)
+# Copy Qt DLLs to output directory
 if(WIN32)
-    # WebP DLLs: copy only if the DLL files exist (static builds produce .a only)
-    if(EXISTS "${CMAKE_SOURCE_DIR}/third_party/libwebp-1.6.0-windows-x64/bin/libwebp.dll")
+    # Find windeployqt
+    get_target_property(QT_CORE_LOCATION Qt6::Core LOCATION)
+    get_filename_component(QT_BIN_DIR ${QT_CORE_LOCATION} DIRECTORY)
+    find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS ${QT_BIN_DIR})
+
+    if(WINDEPLOYQT_EXECUTABLE)
+        # Run windeployqt to copy all necessary Qt DLLs and plugins
         add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                "${CMAKE_SOURCE_DIR}/third_party/libwebp-1.6.0-windows-x64/bin/libwebp.dll"
-                "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+            COMMAND ${WINDEPLOYQT_EXECUTABLE} "$<TARGET_FILE:${PROJECT_NAME}>"
+            WORKING_DIRECTORY "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+            COMMENT "Running windeployqt for deployment"
         )
+    else()
+        message(WARNING "windeployqt.exe not found. Qt DLLs will not be deployed automatically.")
     endif()
-
-    if(EXISTS "${CMAKE_SOURCE_DIR}/third_party/libwebp-1.6.0-windows-x64/bin/libwebpmux.dll")
-        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                "${CMAKE_SOURCE_DIR}/third_party/libwebp-1.6.0-windows-x64/bin/libwebpmux.dll"
-                "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
-        )
-    endif()
-
-    if(EXISTS "${CMAKE_SOURCE_DIR}/third_party/libwebp-1.6.0-windows-x64/bin/libwebpdemux.dll")
-        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                "${CMAKE_SOURCE_DIR}/third_party/libwebp-1.6.0-windows-x64/bin/libwebpdemux.dll"
-                "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
-        )
-    endif()
-
-    # Qt DLLs (use target file locations)
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            $<TARGET_FILE:Qt6::Core>
-            $<TARGET_FILE:Qt6::Gui>
-            $<TARGET_FILE:Qt6::Widgets>
-            "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
-    )
-
-    # Run windeployqt to copy all necessary Qt DLLs and plugins
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND "C:/Qt/6.9.2/mingw_64/bin/windeployqt.exe" "$<TARGET_FILE:${PROJECT_NAME}>"
-        WORKING_DIRECTORY "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
-        COMMENT "Running windeployqt for deployment"
-    )
 endif()
 
 # Install rules

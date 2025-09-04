@@ -1,68 +1,81 @@
 # EZImageManipulator
 
 ## Overview
-EZImageManipulator is a simple, yet powerful, desktop image editing application built with C++ and Qt6. It provides essential image manipulation functionalities, including opening, saving (with WebP support), cropping, rotating, flipping, and resizing images.
 
-## Features
-*   **Open and Save Images:** Supports various image formats, including WebP.
-*   **Zoom:** Zoom in, zoom out, and reset zoom for detailed editing.
-*   **Cropping:** Interactively define and apply crop regions using a resizable overlay.
-*   **Rotation:** Rotate images 90 degrees left or right.
-*   **Flipping:** Flip images horizontally or vertically.
-*   **Resizing:** Resize images with options to maintain or disregard aspect ratio.
-*   **Image Information:** View basic information about the currently loaded image.
+**EZImageManipulator** is a simple, cross-platform desktop application for basic image editing. Built with **C++** and the **Qt6** framework, it provides essential tools for manipulating image files, including support for the modern **WebP** format.
+
+## Key Features
+
+  * ✅ **Image I/O:** Open and save images in various formats, including **WebP**.
+  * ✂️ **Cropping:** Interactively select and apply custom crop regions.
+  * 🔄 **Rotation:** Quickly rotate images 90° to the left or right.
+  * ↔️ **Flipping:** Flip images horizontally or vertically with a single click.
+  * 📐 **Resizing:** Adjust image dimensions with or without maintaining the aspect ratio.
+
+-----
 
 ## How to Build
 
+These instructions will guide you through building the application from source on your system.
+
 ### Prerequisites
-*   **CMake:** Version 3.15 or higher.
-*   **Qt6:** Specifically, Qt 6.9.2 (MinGW 64-bit for Windows, as configured in `CMakeLists.txt`). You can download it from the [official Qt website](https://www.qt.io/download).
-*   **C++ Compiler:** A C++17 compatible compiler (e.g., MinGW-w64 for Windows).
-*   **libwebp:** The project uses a pre-built `libwebp` library, you can download it from the [official webp repository] (https://storage.googleapis.com/downloads.webmproject.org/releases/webp/index.html)
+
+Ensure you have the following installed before you begin:
+
+  * **CMake:** Version 3.15 or higher.
+  * **Qt6:** Version 6.2 or higher. Download it from the [official Qt website](https://www.qt.io/download).
+  * **C++ Compiler:** A compiler that supports C++17 (e.g., MinGW-w64 on Windows, GCC on Linux, or Clang on macOS).
+  * **Git:** Required for CMake to automatically fetch the `libwebp` dependency.
 
 ### Build Steps
 
-1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/your-username/EZImageManipulator.git
-    cd EZImageManipulator
-    ```
-    *(Note: Replace `https://github.com/your-username/EZImageManipulator.git` with the actual repository URL if it's hosted on GitHub.)*
+1.  **Clone the Repository**
+    Start by cloning the project's repository and navigating to the new directory:
 
-2.  **Configure CMake:**
-    Open your terminal or command prompt in the project root directory and create a build directory:
+    ```bash
+    git clone https://github.com/Evgenii-Zinner/ez-image-manipulator.git
+    cd ez-image-manipulator
+    ```
+
+2.  **Configure CMake**
+    Create a `build` directory and run CMake from within it. You **must** specify the path to your Qt6 installation using the `CMAKE_PREFIX_PATH` variable.
+
     ```bash
     mkdir build
     cd build
-    ```
-    Now, configure the project with CMake. **Important:** Ensure `CMAKE_PREFIX_PATH` in `CMakeLists.txt` points to your Qt6 installation directory (e.g., `C:/Qt/6.9.2/mingw_64`).
-    ```bash
-    cmake ..
-    ```
-    If you are using a specific generator (e.g., Ninja, Visual Studio), you might specify it:
-    ```bash
-    cmake -G "Ninja" ..
-    # or for Visual Studio
-    # cmake -G "Visual Studio 17 2022" ..
+    cmake .. -DCMAKE_PREFIX_PATH=/path/to/your/Qt6/installation
     ```
 
-3.  **Build the project:**
+    Here are some examples for different operating systems:
+
+      * **Windows (MinGW):** `cmake .. -DCMAKE_PREFIX_PATH="C:/Qt/6.9.2/mingw_64"`
+      * **Linux:** `cmake .. -DCMAKE_PREFIX_PATH=~/Qt/6.2.4/gcc_64`
+      * **macOS:** `cmake .. -DCMAKE_PREFIX_PATH=~/Qt/6.2.4/clang_64`
+
+    > **Note:** CMake will automatically download and configure the `libwebp` dependency during this step.
+
+3.  **Build the Project**
+    Run the build command to compile the source code:
+
     ```bash
     cmake --build .
     ```
 
-4.  **Run the application:**
-    After a successful build, the executable will be located in the `build` directory (or a subdirectory like `build/bin` depending on your CMake configuration).
+4.  **Run the Application**
+    The executable will be located in the `build/bin` directory. Run the application with the following command:
+
     ```bash
-    ./EZImageManipulator.exe
+    ./bin/EZImageManipulator
     ```
-    *(Note: The exact path to the executable might vary slightly based on your build environment and CMake generator.)*
+
+-----
 
 ## How to Use
-1.  **Open Image:** Click "File" -> "Open" to load an image.
-2.  **Save Image:** Click "File" -> "Save" to save the current image. You can choose the format, including WebP.
-3.  **Zoom:** Use the "Zoom In", "Zoom Out", and "Reset Zoom" options to adjust the view.
-4.  **Crop:** Click "Crop" to activate the cropping tool. Drag the handles of the overlay to define the crop area. Click "Apply Crop" to finalize or "Cancel Crop" to discard.
-5.  **Rotate/Flip:** Use the "Rotate Left", "Rotate Right", "Flip Horizontal", and "Flip Vertical" options to transform the image.
-6.  **Resize:** Click "Resize" to open the resize dialog. Enter new dimensions and optionally check "Keep Aspect Ratio".
-7.  **Image Info:** Click "Image Info" to see details about the loaded image.
+
+The application's interface is designed to be intuitive. Here's a quick guide to its main features:
+
+  * **🖼️ Open & Save:** Use the **File** menu to **Open** an image or **Save** your changes.
+  * **➕➖ Zoom:** Use the zoom controls to get a closer look at your image.
+  * **✂️ Crop:** Click the **Crop** button to activate the tool. Drag the handles on the overlay to define the area, then click **Apply Crop**.
+  * **🔄 Transform:** Use the buttons in the toolbar to **Rotate Left/Right** or **Flip Horizontal/Vertical**.
+  * **📏 Resize:** Enter new dimensions in the **Resize** dialog. You can optionally check **Keep Aspect Ratio** to maintain the image's original proportions.
