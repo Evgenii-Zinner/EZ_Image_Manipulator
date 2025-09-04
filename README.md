@@ -52,7 +52,7 @@ Ensure you have the following installed before you begin:
       * **Linux:** `cmake .. -DCMAKE_PREFIX_PATH=~/Qt/6.2.4/gcc_64`
       * **macOS:** `cmake .. -DCMAKE_PREFIX_PATH=~/Qt/6.2.4/clang_64`
 
-    > **Note:** CMake will automatically download and configure the `libwebp` dependency during this step.
+    > **Note:** CMake will automatically download and configure the [libwebp](https://github.com/webmproject/libwebp) dependency during this step.
 
 3.  **Build the Project**
     Run the build command to compile the source code:
@@ -75,7 +75,7 @@ Ensure you have the following installed before you begin:
 The application's interface is designed to be intuitive. Here's a quick guide to its main features:
 
   * **🖼️ Open & Save:** Use the **File** menu to **Open** an image or **Save** your changes.
-  * **➕➖ Zoom:** Use the zoom controls to get a closer look at your image.
+  * **🔍 Zoom:** Use the zoom controls to get a closer look at your image.
   * **✂️ Crop:** Click the **Crop** button to activate the tool. Drag the handles on the overlay to define the area, then click **Apply Crop**.
   * **🔄 Transform:** Use the buttons in the toolbar to **Rotate Left/Right** or **Flip Horizontal/Vertical**.
   * **📏 Resize:** Enter new dimensions in the **Resize** dialog. You can optionally check **Keep Aspect Ratio** to maintain the image's original proportions.
