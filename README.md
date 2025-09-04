@@ -33,8 +33,8 @@ Ensure you have the following installed before you begin:
     Start by cloning the project's repository and navigating to the new directory:
 
     ```bash
-    git clone https://github.com/Evgenii-Zinner/ez-image-manipulator.git
-    cd ez-image-manipulator
+    git clone https://github.com/Evgenii-Zinner/ez_image_manipulator.git
+    cd ez_image_manipulator
     ```
 
 2.  **Configure CMake**
