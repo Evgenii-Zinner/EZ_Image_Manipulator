@@ -22,17 +22,13 @@ jobs:
       with:
         submodules: true
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
-
     - name: Install Qt
       uses: jurplel/install-qt-action@v4
       with:
         version: '6.9.2' 
         target: 'desktop'
         arch: 'mingw_64' 
+        extra: '--base https://mirrors.dotsrc.org/qtproject --UNSAFE-ignore-hash'
         
     - name: Set up CMake
       uses: jwlawson/actions-setup-cmake@v2
