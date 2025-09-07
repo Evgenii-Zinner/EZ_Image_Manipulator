@@ -18,10 +18,10 @@ jobs:
         # Expand the matrix to include OS-specific variables
         include:
           - os: ubuntu-latest
-            qt_arch: 'gcc_64' # Use GCC architecture for Linux
+            qt_arch: 'linux_gcc_64' # Use GCC architecture for Linux
             artifact_name: EZImageManipulator-Linux.zip
           - os: windows-latest
-            qt_arch: 'mingw_64' # Use MinGW architecture for Windows
+            qt_arch: 'win64_mingw' # Use MinGW architecture for Windows
             artifact_name: EZImageManipulator-Windows.zip
 
     runs-on: ${{ matrix.os }}
