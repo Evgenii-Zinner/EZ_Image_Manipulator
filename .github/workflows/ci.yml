@@ -13,15 +13,13 @@ jobs:
   build:
     strategy:
       matrix:
-        # Define the operating systems to run on
         os: [ubuntu-latest, windows-latest]
-        # Expand the matrix to include OS-specific variables
         include:
           - os: ubuntu-latest
-            qt_arch: 'linux_gcc_64' # Use GCC architecture for Linux
+            qt_arch: 'linux_gcc_64' 
             artifact_name: EZImageManipulator-Linux.zip
           - os: windows-latest
-            qt_arch: 'win64_msvc2022_64' # Use MinGW architecture for Windows
+            qt_arch: 'win64_msvc2022_64' 
             artifact_name: EZImageManipulator-Windows.zip
 
     runs-on: ${{ matrix.os }}
@@ -41,7 +39,6 @@ jobs:
       with:
         version: '6.9.2'
         target: 'desktop'
-        # Use the architecture specific to the OS from the matrix
         arch: ${{ matrix.qt_arch }}
         
     - name: Set up CMake
@@ -59,7 +56,7 @@ jobs:
       shell: bash
 
     - name: Build Project
-      run: cmake --build build
+      run: cmake --build build --target EZImageManipulator
 
     - name: Package Executable
       shell: bash
@@ -78,23 +75,16 @@ jobs:
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
-        # Give the artifact a unique name per OS
         name: Executable-${{ matrix.os }}
         path: ${{ env.EXECUTABLE_PATH }}
 
     - name: Create Release
-      # This step runs on push to main for each job in the matrix
-      # It will create one release and attach the artifacts from both Windows and Linux jobs
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       uses: ncipollo/release-action@v1
       with:
-        # Attach the OS-specific zip file
         artifacts: "${{ env.EXECUTABLE_PATH }}"
         token: ${{ secrets.GITHUB_TOKEN }}
-        # Use a consistent tag for both jobs of the same run
         tag: "v1.0.0-${{ github.run_number }}"
         name: "Release ${{ github.run_number }}"
         body: "Automated build release."
-        # Allows this action to update an existing release, which is what happens
-        # when the second job in the matrix runs.
         allowUpdates: true
