@@ -64,21 +64,15 @@ jobs:
     - name: Package Executable
       shell: bash
       run: |
-        # Create build directory path variable for convenience
         BUILD_DIR=build
         
-        # Set artifact name in environment for later steps
-        echo "EXECUTABLE_PATH=${{ matrix.artifact_name }}" >> $GITHUB_ENV
-
-        if [ "$RUNNER_OS" == "Windows" ]; then
-          # Deploy Qt dependencies for Windows
-          windeployqt --release $BUILD_DIR/EZImageManipulator.exe
-          # Package the result
-          7z a ${{ matrix.artifact_name }} ./$BUILD_DIR/
+        if [ "${{ runner.os }}" == "Windows" ]; then
+          windeployqt --release $BUILD_DIR/Release/EZImageManipulator.exe
+          7z a EZImageManipulator-Windows.zip ./$BUILD_DIR/Release/
+          echo "EXECUTABLE_PATH=EZImageManipulator-Windows.zip" >> $GITHUB_ENV
         else
-          # For Linux, a better approach is using linuxdeployqt,
-          # but for a basic build artifact, zipping the content is a start.
-          zip -r ${{ matrix.artifact_name }} ./$BUILD_DIR/
+          zip -r EZImageManipulator-Linux.zip ./$BUILD_DIR/
+          echo "EXECUTABLE_PATH=EZImageManipulator-Linux.zip" >> $GITHUB_ENV
         fi
         
     - name: Upload Artifact
