@@ -18,9 +18,6 @@ if(MSVC)
     add_compile_options(/Zc:__cplusplus)
 endif()
 
-# Find Qt packages
-# The path to Qt6 should be provided by the user when running CMake, e.g.:
-# cmake -B build -DCMAKE_PREFIX_PATH="C:/Qt/6.9.2/mingw_64"
 find_package(Qt6 COMPONENTS
     Core
     Gui
@@ -28,13 +25,13 @@ find_package(Qt6 COMPONENTS
     REQUIRED
 )
 
-# WebP configuration using FetchContent
 include(FetchContent)
 FetchContent_Declare(
     libwebp
     GIT_REPOSITORY https://github.com/webmproject/libwebp.git
-    GIT_TAG v1.6.0 # Using a stable version tag
+    GIT_TAG v1.6.0 
 )
+set(WEBP_BUILD_EXTRAS OFF)
 FetchContent_MakeAvailable(libwebp)
 
 
