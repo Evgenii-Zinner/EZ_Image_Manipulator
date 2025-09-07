@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: true
+
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v4
+      with:
+        version: '6.9.2' 
+        target: 'desktop'
+        arch: 'mingw_64' 
+        
+    - name: Set up CMake
+      uses: jwlawson/actions-setup-cmake@v2
+      with:
+        cmake-version: '3.25.0'
+
+    - name: Configure CMake
+      run: cmake -S . -B build -G 'Ninja' -DCMAKE_PREFIX_PATH='${{ env.QT_ROOT_DIR }}'
+
+    - name: Build Project
+      run: cmake --build build
+
+    - name: Package Executable
+      shell: bash
+      run: |
+        if [ "$RUNNER_OS" == "Windows" ]; then
+          windeployqt --release build/EZImageManipulator.exe
+          7z a EZImageManipulator-Windows.zip build/
+          echo "EXECUTABLE_PATH=EZImageManipulator-Windows.zip" >> $GITHUB_ENV
+        else
+          zip -r EZImageManipulator-Linux.zip build/
+          echo "EXECUTABLE_PATH=EZImageManipulator-Linux.zip" >> $GITHUB_ENV
+        fi
+      
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: EZImageManipulator-binaries
+        path: ${{ env.EXECUTABLE_PATH }}
+
+    - name: Create Release
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      uses: ncipollo/release-action@v1
+      with:
+        artifacts: "${{ env.EXECUTABLE_PATH }}"
+        token: ${{ secrets.GITHUB_TOKEN }}
+        tag: "v1.0.0-${{ github.run_number }}"
+        name: "Release ${{ github.run_number }}"
+        body: "Automated build release."
