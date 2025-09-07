@@ -13,7 +13,16 @@ jobs:
   build:
     strategy:
       matrix:
+        # Define the operating systems to run on
         os: [ubuntu-latest, windows-latest]
+        # Expand the matrix to include OS-specific variables
+        include:
+          - os: ubuntu-latest
+            qt_arch: 'gcc_64' # Use GCC architecture for Linux
+            artifact_name: EZImageManipulator-Linux.zip
+          - os: windows-latest
+            qt_arch: 'mingw_64' # Use MinGW architecture for Windows
+            artifact_name: EZImageManipulator-Windows.zip
 
     runs-on: ${{ matrix.os }}
 
@@ -30,10 +39,10 @@ jobs:
     - name: Install Qt
       uses: jurplel/install-qt-action@v4
       with:
-        version: '6.9.2' 
+        version: '6.9.2'
         target: 'desktop'
-        arch: 'mingw_64' 
-        extra: '--base https://mirrors.dotsrc.org/qtproject --UNSAFE-ignore-hash'
+        # Use the architecture specific to the OS from the matrix
+        arch: ${{ matrix.qt_arch }}
         
     - name: Set up CMake
       uses: jwlawson/actions-setup-cmake@v2
@@ -41,7 +50,7 @@ jobs:
         cmake-version: '3.25.0'
 
     - name: Configure CMake
-      run: cmake -S . -B build -G 'Ninja' -DCMAKE_PREFIX_PATH='${{ env.QT_ROOT_DIR }}'
+      run: cmake -S . -B build -G "Ninja" -DCMAKE_PREFIX_PATH="${{ env.QT_ROOT_DIR }}"
 
     - name: Build Project
       run: cmake --build build
@@ -49,27 +58,43 @@ jobs:
     - name: Package Executable
       shell: bash
       run: |
+        # Create build directory path variable for convenience
+        BUILD_DIR=build
+        
+        # Set artifact name in environment for later steps
+        echo "EXECUTABLE_PATH=${{ matrix.artifact_name }}" >> $GITHUB_ENV
+
         if [ "$RUNNER_OS" == "Windows" ]; then
-          windeployqt --release build/EZImageManipulator.exe
-          7z a EZImageManipulator-Windows.zip build/
-          echo "EXECUTABLE_PATH=EZImageManipulator-Windows.zip" >> $GITHUB_ENV
+          # Deploy Qt dependencies for Windows
+          windeployqt --release $BUILD_DIR/EZImageManipulator.exe
+          # Package the result
+          7z a ${{ matrix.artifact_name }} ./$BUILD_DIR/
         else
-          zip -r EZImageManipulator-Linux.zip build/
-          echo "EXECUTABLE_PATH=EZImageManipulator-Linux.zip" >> $GITHUB_ENV
+          # For Linux, a better approach is using linuxdeployqt,
+          # but for a basic build artifact, zipping the content is a start.
+          zip -r ${{ matrix.artifact_name }} ./$BUILD_DIR/
         fi
-      
+        
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: EZImageManipulator-binaries
+        # Give the artifact a unique name per OS
+        name: Executable-${{ matrix.os }}
         path: ${{ env.EXECUTABLE_PATH }}
 
     - name: Create Release
+      # This step runs on push to main for each job in the matrix
+      # It will create one release and attach the artifacts from both Windows and Linux jobs
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       uses: ncipollo/release-action@v1
       with:
+        # Attach the OS-specific zip file
         artifacts: "${{ env.EXECUTABLE_PATH }}"
         token: ${{ secrets.GITHUB_TOKEN }}
+        # Use a consistent tag for both jobs of the same run
         tag: "v1.0.0-${{ github.run_number }}"
         name: "Release ${{ github.run_number }}"
         body: "Automated build release."
+        # Allows this action to update an existing release, which is what happens
+        # when the second job in the matrix runs.
+        allowUpdates: true
