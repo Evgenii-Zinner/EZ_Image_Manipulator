@@ -21,6 +21,8 @@ jobs:
           - os: windows-latest
             qt_arch: 'win64_msvc2022_64' 
             artifact_name: EZImageManipulator-Windows.zip
+    permissions:
+      contents: write
 
     runs-on: ${{ matrix.os }}
 
@@ -64,14 +66,12 @@ jobs:
     - name: Package Executable
       shell: bash
       run: |
-        BUILD_DIR=build
-        
         if [ "${{ runner.os }}" == "Windows" ]; then
-          windeployqt --release $BUILD_DIR/Release/EZImageManipulator.exe
-          7z a EZImageManipulator-Windows.zip ./$BUILD_DIR/Release/
+          windeployqt --release build/Release/EZImageManipulator.exe
+          7z a EZImageManipulator-Windows.zip ./build/Release/*
           echo "EXECUTABLE_PATH=EZImageManipulator-Windows.zip" >> $GITHUB_ENV
         else
-          zip -r EZImageManipulator-Linux.zip ./$BUILD_DIR/
+          (cd build && zip -r ../EZImageManipulator-Linux.zip .)
           echo "EXECUTABLE_PATH=EZImageManipulator-Linux.zip" >> $GITHUB_ENV
         fi
         
@@ -82,7 +82,7 @@ jobs:
         path: ${{ env.EXECUTABLE_PATH }}
 
     - name: Create Release
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      if: github.event_name == 'push' && github.ref == 'refs/heads/master'
       uses: ncipollo/release-action@v1
       with:
         artifacts: "${{ env.EXECUTABLE_PATH }}"
